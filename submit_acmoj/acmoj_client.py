@@ -133,7 +133,18 @@ def main():
     args = parser.parse_args()
 
     if not args.token:
-        print("Error: Access token not provided. Use --token or set ACMOJ_TOKEN environment variable.")
+        # Fallback: read from token file if present
+        token_file = os.environ.get("ACMOJ_TOKEN_FILE") or \
+                     (os.path.expanduser("~/.acmoj_token") if os.path.exists(os.path.expanduser("~/.acmoj_token")) else None) or \
+                     ("/workspace/.acmoj_token" if os.path.exists("/workspace/.acmoj_token") else None)
+        if token_file:
+            try:
+                with open(token_file, 'r') as f:
+                    args.token = f.read().strip()
+            except Exception:
+                pass
+    if not args.token:
+        print("Error: Access token not provided. Use --token, set ACMOJ_TOKEN env var, or provide ~/.acmoj_token or /workspace/.acmoj_token.")
         return
 
     client = ACMOJClient(args.token)
